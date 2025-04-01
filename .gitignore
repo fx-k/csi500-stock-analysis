@@ -1,0 +1,31 @@
+# 忽略数据目录下的CSV文件
+data/*.csv
+data/news/*.csv
+
+# 保留示例文件
+!data/sample_stock_data_000021.csv
+!data/news/sample_news_20240304.csv
+
+# Python开发环境
+__pycache__/
+*.py[cod]
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+
+# 虚拟环境
+venv/
+env/
+
+# 编辑器临时文件
+*.swp
+*.swo
+*.vscode/
+
+# 日志文件
+*.log
+
+# MacOS
+.DS_Store
