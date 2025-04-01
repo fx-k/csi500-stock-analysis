@@ -1,3 +1,11 @@
+<!--
+ * @Author: fx-k admin@fxit.top
+ * @Date: 2025-04-01 17:09:10
+ * @LastEditors: fx-k admin@fxit.top
+ * @LastEditTime: 2025-04-01 17:50:50
+ * @FilePath: /csi500-stock-analysis/README.md
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
 # CSI500 Stock Analysis
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
@@ -32,7 +40,7 @@
 ## 安装指引
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/csi500-stock-analysis.git
+git clone https://github.com/fx-k/csi500-stock-analysis.git
 
 # 安装依赖
 pip install -r requirements.txt
@@ -45,8 +53,6 @@ pip install -r requirements.txt
 # 运行主程序（自动下载全部数据）
 python stock_data_fetcher.py
 
-# 测试AKShare连接（单个股票测试）
-python stock_data_fetcher.py --test 600519
 ```
 
 ## 技术指标计算
