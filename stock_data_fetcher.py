@@ -145,7 +145,7 @@ def main():
         if news_df is not None:
             news_filename = f"./data/news/news_{date_str}.csv"
             news_df.to_csv(news_filename, index=False)
-            pbar.write(f"已实时保存 {stock_code} 数据到 {filename}")
+            print(f"已实时保存新闻数据到 {news_filename}")
 
     return None
 
