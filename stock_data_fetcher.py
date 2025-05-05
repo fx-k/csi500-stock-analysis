@@ -134,8 +134,30 @@ def main():
     # 创建新闻数据目录
     os.makedirs("./data/news", exist_ok=True)
     
-    # 获取新闻数据（示例日期范围）
-    news_start_date = "20240301"
+    # 查找所有股票数据中最早的日期作为新闻数据的起始日期
+    earliest_date = None
+    stock_files = [f for f in os.listdir("./data") if f.startswith("stock_data_") and f.endswith(".csv")]
+    
+    if stock_files:
+        for stock_file in stock_files:
+            try:
+                stock_df = pd.read_csv(f"./data/{stock_file}")
+                if not stock_df.empty and 'date' in stock_df.columns:
+                    stock_df['date'] = pd.to_datetime(stock_df['date'])
+                    min_date = stock_df['date'].min()
+                    if earliest_date is None or min_date < earliest_date:
+                        earliest_date = min_date
+            except Exception as e:
+                print(f"读取{stock_file}时出错: {str(e)}")
+    
+    # 如果没有找到有效的最早日期，使用默认的起始日期
+    if earliest_date is None:
+        news_start_date = default_start_date
+        print(f"未找到有效的股票数据，使用默认起始日期: {news_start_date}")
+    else:
+        news_start_date = earliest_date.strftime("%Y%m%d")
+        print(f"使用最早股票数据日期作为新闻数据起始日期: {news_start_date}")
+    
     news_end_date = datetime.now().strftime("%Y%m%d")
     date_range = pd.date_range(news_start_date, news_end_date)
     
