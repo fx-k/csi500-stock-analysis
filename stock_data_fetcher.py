@@ -80,16 +80,26 @@ def get_stock_data(stock_code, start_date, end_date, listing_date=None):
                 return None
 
 
-def news_cctv_data(date):
-    """获取指定日期的新闻联播数据"""
-    try:
-        df = ak.news_cctv(date=date)
-        if not df.empty:
-            return df[['date', 'title', 'content']]
-        return None
-    except Exception as e:
-        print(f"获取{date}新闻数据时出错: {str(e)}")
-        return None
+def get_stock_news(stock_code):
+    """获取个股新闻数据"""
+    max_retries = 3
+    retry_delay = 1  # 初始延迟1秒
+    for attempt in range(max_retries):
+        try:
+            df = ak.stock_news_em(symbol=stock_code)
+            if not df.empty:
+                return df
+            return None
+        except Exception as e:
+            if attempt < max_retries - 1:
+                print(f"获取{stock_code}新闻数据时出错（第{attempt+1}次重试）: {str(e)}")
+                time.sleep(retry_delay)
+                retry_delay *= 2
+            else:
+                with open("./data/error_log.txt", "a") as f:
+                    f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | {stock_code} 新闻 | {str(e)}\n")
+                print(f"\n{stock_code}新闻数据获取失败，已记录到error_log.txt")
+                return None
 
 
 def main():
@@ -134,40 +144,31 @@ def main():
     # 创建新闻数据目录
     os.makedirs("./data/news", exist_ok=True)
     
-    # 查找所有股票数据中最早的日期作为新闻数据的起始日期
-    earliest_date = None
-    stock_files = [f for f in os.listdir("./data") if f.startswith("stock_data_") and f.endswith(".csv")]
-    
-    if stock_files:
-        for stock_file in stock_files:
-            try:
-                stock_df = pd.read_csv(f"./data/{stock_file}")
-                if not stock_df.empty and 'date' in stock_df.columns:
-                    stock_df['date'] = pd.to_datetime(stock_df['date'])
-                    min_date = stock_df['date'].min()
-                    if earliest_date is None or min_date < earliest_date:
-                        earliest_date = min_date
-            except Exception as e:
-                print(f"读取{stock_file}时出错: {str(e)}")
-    
-    # 如果没有找到有效的最早日期，使用默认的起始日期
-    if earliest_date is None:
-        news_start_date = default_start_date
-        print(f"未找到有效的股票数据，使用默认起始日期: {news_start_date}")
-    else:
-        news_start_date = earliest_date.strftime("%Y%m%d")
-        print(f"使用最早股票数据日期作为新闻数据起始日期: {news_start_date}")
-    
-    news_end_date = datetime.now().strftime("%Y%m%d")
-    date_range = pd.date_range(news_start_date, news_end_date)
-    
-    for single_date in tqdm(date_range, desc="Processing News Data"):
-        date_str = single_date.strftime("%Y%m%d")
-        news_df = news_cctv_data(date_str)
-        if news_df is not None:
-            news_filename = f"./data/news/news_{date_str}.csv"
+    # 为每支股票获取新闻数据
+    print("\n开始获取个股新闻数据...")
+    news_pbar = tqdm(stock_list.iterrows(), total=len(stock_list), desc="Processing Stock News")
+    for index, row in news_pbar:
+        stock_code = row["品种代码"]
+        stock_name = row["品种名称"]
+        
+        news_pbar.set_description(f"Processing News for {stock_code} - {stock_name}")
+        
+        # 创建每支股票的新闻目录
+        stock_news_dir = f"./data/news"
+        os.makedirs(stock_news_dir, exist_ok=True)
+        
+        # 获取个股新闻
+        news_df = get_stock_news(stock_code)
+        
+        if news_df is not None and not news_df.empty:
+            news_filename = f"{stock_news_dir}/news_{stock_code}.csv"
             news_df.to_csv(news_filename, index=False)
-            print(f"已实时保存新闻数据到 {news_filename}")
+            news_pbar.write(f"已实时保存 {stock_code} 新闻数据到 {news_filename}")
+        else:
+            news_pbar.write(f"未获取到 {stock_code} 的新闻数据")
+            
+        # 避免请求过于频繁
+        time.sleep(0.5)
 
     return None
 
